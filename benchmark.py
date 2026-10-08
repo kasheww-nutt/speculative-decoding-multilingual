@@ -30,9 +30,11 @@ _get_stopping_criteria) and the ROC write-back (gated on truthiness).
 
 Other methodology notes
 -----------------------
-  * repetition_penalty is forced to 1.0. Qwen ships 1.05 (target) and 1.1
-    (draft) in generation_config, so "greedy" would otherwise not be argmax
-    and the two models would be penalised differently.
+  * repetition_penalty is set explicitly for BOTH models (--rep-penalty,
+    default 1.05 = Qwen's own setting for the 3B). Qwen ships 1.05 for the
+    target and 1.1 for the draft, so left alone the two are penalised by
+    different amounts. 1.0 gives true argmax but makes the 3B loop badly in
+    Urdu; it also shifts the token distribution, so it can move tau.
   * Condition order is shuffled with a fixed seed, so thermal drift is spread
     across conditions instead of always landing on whatever ran last.
   * Every condition is repeated --repeats times and aggregated by MEDIAN, so a
@@ -126,13 +128,20 @@ def encode(tok, prompt):
     return tok(text, return_tensors="pt").to("cuda")
 
 
-GREEDY = dict(do_sample=False, temperature=None, top_p=None, top_k=None,
-              repetition_penalty=1.0)   # Qwen ships 1.05/1.1; force true argmax
+# Qwen ships repetition_penalty 1.05 (3B) and 1.1 (0.5B) in generation_config.
+# Set explicitly so BOTH models use the same value - otherwise "greedy" is not
+# argmax and the two models are penalised by different amounts.
+#   1.0  = true argmax, but the 3B loops badly in Urdu ("yahan yahan yahan...")
+#   1.05 = Qwen's intended setting for the target; readable output
+# Changing it shifts the token distribution, so it can move tau as well as text
+# quality. --rep-penalty makes that an explicit, reproducible choice.
+GREEDY = dict(do_sample=False, temperature=None, top_p=None, top_k=None)
 
 
 @torch.inference_mode()
-def generate(target, tok, inputs, max_new, counter, draft=None, k=None):
-    kwargs = dict(max_new_tokens=max_new, pad_token_id=tok.eos_token_id, **GREEDY)
+def generate(target, tok, inputs, max_new, counter, draft=None, k=None, rep_penalty=1.05):
+    kwargs = dict(max_new_tokens=max_new, pad_token_id=tok.eos_token_id,
+                  repetition_penalty=rep_penalty, **GREEDY)
     if draft is not None:
         set_draft_strategy(draft, k)
         kwargs["assistant_model"] = draft
@@ -147,7 +156,7 @@ def generate(target, tok, inputs, max_new, counter, draft=None, k=None):
 
 
 @torch.inference_mode()
-def calibrate_pass_cost(target, draft, tok, counter, n=64):
+def calibrate_pass_cost(target, draft, tok, counter, n=64, rep_penalty=1.05):
     """Seconds per forward pass for each model alone, batch 1, with a KV cache.
     Plain greedy decoding is exactly one forward pass per token, so sec/token is
     sec/pass. Returns (target_sec_per_pass, draft_sec_per_pass, c)."""
@@ -156,11 +165,13 @@ def calibrate_pass_cost(target, draft, tok, counter, n=64):
     for name, model in (("target", target), ("draft", draft)):
         for _ in range(2):   # warm up this model's kernels
             model.generate(**inputs, max_new_tokens=8, min_new_tokens=8,
-                           pad_token_id=tok.eos_token_id, **GREEDY)
+                           pad_token_id=tok.eos_token_id,
+                           repetition_penalty=rep_penalty, **GREEDY)
         torch.cuda.synchronize()
         t0 = time.perf_counter()
         model.generate(**inputs, max_new_tokens=n, min_new_tokens=n,
-                       pad_token_id=tok.eos_token_id, **GREEDY)
+                       pad_token_id=tok.eos_token_id,
+                       repetition_penalty=rep_penalty, **GREEDY)
         torch.cuda.synchronize()
         out[name] = (time.perf_counter() - t0) / n
     counter.n = 0
@@ -178,6 +189,9 @@ def main():
                     help="draft lengths to sweep (HF unpinned behaves like K=20)")
     ap.add_argument("--repeats", type=int, default=2, help="trials per condition; median reported")
     ap.add_argument("--seed", type=int, default=0, help="seed for condition shuffling")
+    ap.add_argument("--rep-penalty", type=float, default=1.05,
+                    help="repetition_penalty for BOTH models. 1.0 = true argmax but the 3B "
+                         "loops in Urdu; 1.05 = Qwen's own setting for the target (default)")
     ap.add_argument("--out", default="results")
     args = ap.parse_args()
 
@@ -203,11 +217,12 @@ def main():
 
     # Warm-up (CUDA kernels, caches) - not measured.
     warm = encode(tok, "Hello, how are you?")
-    generate(target, tok, warm, 32, counter)
-    generate(target, tok, warm, 32, counter, draft, k=args.k[0])
+    generate(target, tok, warm, 32, counter, rep_penalty=args.rep_penalty)
+    generate(target, tok, warm, 32, counter, draft, k=args.k[0], rep_penalty=args.rep_penalty)
 
     print("\nCalibrating forward-pass cost (batch 1) ...")
-    t_pass, d_pass, c = calibrate_pass_cost(target, draft, tok, counter)
+    t_pass, d_pass, c = calibrate_pass_cost(target, draft, tok, counter,
+                                            rep_penalty=args.rep_penalty)
     k0 = args.k[0]
     print(f"  target {t_pass * 1e3:.1f} ms/pass | draft {d_pass * 1e3:.1f} ms/pass | c = {c:.2f}")
     print(f"  a win needs tau > 1 + K*c, i.e. tau > {1 + k0 * c:.1f} at K={k0}")
@@ -235,7 +250,8 @@ def main():
         for lang, i, k in order:
             inputs = encode(tok, prompts[lang][i])
             ids, dt, passes = generate(target, tok, inputs, args.max_new, counter,
-                                       draft=(draft if k else None), k=(k or None))
+                                       draft=(draft if k else None), k=(k or None),
+                                       rep_penalty=args.rep_penalty)
             key = (lang, i)
             if k == 0 and key not in canonical:
                 canonical[key] = ids
@@ -303,6 +319,7 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
     summary = dict(
         gpu=gpu, target=args.target, draft=args.draft, max_new=args.max_new,
         repeats=args.repeats, seed=args.seed, k_sweep=args.k,
+        rep_penalty=args.rep_penalty,
         target_ms_per_pass=round(t_pass * 1e3, 2),
         draft_ms_per_pass=round(d_pass * 1e3, 2),
         c=round(c, 3),
