@@ -30,9 +30,11 @@ _get_stopping_criteria) and the ROC write-back (gated on truthiness).
 
 Other methodology notes
 -----------------------
-  * repetition_penalty is forced to 1.0. Qwen ships 1.05 (target) and 1.1
-    (draft) in generation_config, so "greedy" would otherwise not be argmax
-    and the two models would be penalised differently.
+  * repetition_penalty is set explicitly for BOTH models (--rep-penalty,
+    default 1.05 = Qwen's own setting for the 3B). Qwen ships 1.05 for the
+    target and 1.1 for the draft, so left alone the two are penalised by
+    different amounts. 1.0 gives true argmax but makes the 3B loop badly in
+    Urdu; it also shifts the token distribution, so it can move tau.
   * Condition order is shuffled with a fixed seed, so thermal drift is spread
     across conditions instead of always landing on whatever ran last.
   * Every condition is repeated --repeats times and aggregated by MEDIAN, so a
@@ -50,6 +52,7 @@ import csv
 import json
 import random
 import statistics as st
+import subprocess
 import time
 from pathlib import Path
 
@@ -95,6 +98,20 @@ def load(name):
     return model
 
 
+def gpu_clock_mhz():
+    """Current SM clock. Sampled OUTSIDE every timed region, so it cannot affect
+    a measurement. Recorded per run because an ASUS power-profile change once
+    dropped this box from 2580 to 930 MHz mid-sweep and silently ruined the
+    wall-clock timings (tau was unaffected - it is a pure count ratio)."""
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=clocks.sm", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=5).stdout.strip().splitlines()[0]
+        return int(out)
+    except Exception:
+        return None
+
+
 def set_draft_strategy(draft, k):
     """Pin the speculation strategy. Must run before EVERY assisted generate():
     transformers mutates assistant_confidence_threshold in place and the change
@@ -111,13 +128,20 @@ def encode(tok, prompt):
     return tok(text, return_tensors="pt").to("cuda")
 
 
-GREEDY = dict(do_sample=False, temperature=None, top_p=None, top_k=None,
-              repetition_penalty=1.0)   # Qwen ships 1.05/1.1; force true argmax
+# Qwen ships repetition_penalty 1.05 (3B) and 1.1 (0.5B) in generation_config.
+# Set explicitly so BOTH models use the same value - otherwise "greedy" is not
+# argmax and the two models are penalised by different amounts.
+#   1.0  = true argmax, but the 3B loops badly in Urdu ("yahan yahan yahan...")
+#   1.05 = Qwen's intended setting for the target; readable output
+# Changing it shifts the token distribution, so it can move tau as well as text
+# quality. --rep-penalty makes that an explicit, reproducible choice.
+GREEDY = dict(do_sample=False, temperature=None, top_p=None, top_k=None)
 
 
 @torch.inference_mode()
-def generate(target, tok, inputs, max_new, counter, draft=None, k=None):
-    kwargs = dict(max_new_tokens=max_new, pad_token_id=tok.eos_token_id, **GREEDY)
+def generate(target, tok, inputs, max_new, counter, draft=None, k=None, rep_penalty=1.05):
+    kwargs = dict(max_new_tokens=max_new, pad_token_id=tok.eos_token_id,
+                  repetition_penalty=rep_penalty, **GREEDY)
     if draft is not None:
         set_draft_strategy(draft, k)
         kwargs["assistant_model"] = draft
@@ -132,7 +156,7 @@ def generate(target, tok, inputs, max_new, counter, draft=None, k=None):
 
 
 @torch.inference_mode()
-def calibrate_pass_cost(target, draft, tok, counter, n=64):
+def calibrate_pass_cost(target, draft, tok, counter, n=64, rep_penalty=1.05):
     """Seconds per forward pass for each model alone, batch 1, with a KV cache.
     Plain greedy decoding is exactly one forward pass per token, so sec/token is
     sec/pass. Returns (target_sec_per_pass, draft_sec_per_pass, c)."""
@@ -141,11 +165,13 @@ def calibrate_pass_cost(target, draft, tok, counter, n=64):
     for name, model in (("target", target), ("draft", draft)):
         for _ in range(2):   # warm up this model's kernels
             model.generate(**inputs, max_new_tokens=8, min_new_tokens=8,
-                           pad_token_id=tok.eos_token_id, **GREEDY)
+                           pad_token_id=tok.eos_token_id,
+                           repetition_penalty=rep_penalty, **GREEDY)
         torch.cuda.synchronize()
         t0 = time.perf_counter()
         model.generate(**inputs, max_new_tokens=n, min_new_tokens=n,
-                       pad_token_id=tok.eos_token_id, **GREEDY)
+                       pad_token_id=tok.eos_token_id,
+                       repetition_penalty=rep_penalty, **GREEDY)
         torch.cuda.synchronize()
         out[name] = (time.perf_counter() - t0) / n
     counter.n = 0
@@ -163,6 +189,9 @@ def main():
                     help="draft lengths to sweep (HF unpinned behaves like K=20)")
     ap.add_argument("--repeats", type=int, default=2, help="trials per condition; median reported")
     ap.add_argument("--seed", type=int, default=0, help="seed for condition shuffling")
+    ap.add_argument("--rep-penalty", type=float, default=1.05,
+                    help="repetition_penalty for BOTH models. 1.0 = true argmax but the 3B "
+                         "loops in Urdu; 1.05 = Qwen's own setting for the target (default)")
     ap.add_argument("--out", default="results")
     args = ap.parse_args()
 
@@ -188,11 +217,12 @@ def main():
 
     # Warm-up (CUDA kernels, caches) - not measured.
     warm = encode(tok, "Hello, how are you?")
-    generate(target, tok, warm, 32, counter)
-    generate(target, tok, warm, 32, counter, draft, k=args.k[0])
+    generate(target, tok, warm, 32, counter, rep_penalty=args.rep_penalty)
+    generate(target, tok, warm, 32, counter, draft, k=args.k[0], rep_penalty=args.rep_penalty)
 
     print("\nCalibrating forward-pass cost (batch 1) ...")
-    t_pass, d_pass, c = calibrate_pass_cost(target, draft, tok, counter)
+    t_pass, d_pass, c = calibrate_pass_cost(target, draft, tok, counter,
+                                            rep_penalty=args.rep_penalty)
     k0 = args.k[0]
     print(f"  target {t_pass * 1e3:.1f} ms/pass | draft {d_pass * 1e3:.1f} ms/pass | c = {c:.2f}")
     print(f"  a win needs tau > 1 + K*c, i.e. tau > {1 + k0 * c:.1f} at K={k0}")
@@ -220,7 +250,8 @@ def main():
         for lang, i, k in order:
             inputs = encode(tok, prompts[lang][i])
             ids, dt, passes = generate(target, tok, inputs, args.max_new, counter,
-                                       draft=(draft if k else None), k=(k or None))
+                                       draft=(draft if k else None), k=(k or None),
+                                       rep_penalty=args.rep_penalty)
             key = (lang, i)
             if k == 0 and key not in canonical:
                 canonical[key] = ids
@@ -233,6 +264,7 @@ def main():
                 tokens=len(ids), sec=round(dt, 3), tps=round(len(ids) / dt, 2),
                 passes=passes, tau=round(tau, 3),
                 matches_baseline=None,   # resolved after the loop, see below
+                sm_mhz=gpu_clock_mhz(),  # sampled outside the timed region
                 wall=round(time.perf_counter() - t_start, 1),
             ))
             label = "baseline" if k == 0 else f"K={k}"
@@ -287,6 +319,7 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
     summary = dict(
         gpu=gpu, target=args.target, draft=args.draft, max_new=args.max_new,
         repeats=args.repeats, seed=args.seed, k_sweep=args.k,
+        rep_penalty=args.rep_penalty,
         target_ms_per_pass=round(t_pass * 1e3, 2),
         draft_ms_per_pass=round(d_pass * 1e3, 2),
         c=round(c, 3),
@@ -306,8 +339,12 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
         if not base:
             continue
         drift = [r["tps"] for r in all_lang if r["k"] == 0]
+        clocks = [r["sm_mhz"] for r in all_lang if r.get("sm_mhz")]
         entry = dict(
             n_prompts=len(base),
+            sm_mhz_min=min(clocks) if clocks else None,
+            sm_mhz_max=max(clocks) if clocks else None,
+            sm_mhz_median=round(st.median(clocks)) if clocks else None,
             lang_ok_rate=round(len({r["prompt_id"] for r in lr})
                                / len({r["prompt_id"] for r in all_lang}), 2),
             base_tps=med(list(base.values())),
@@ -359,6 +396,11 @@ def report(summary, args):
               f" right language {s['lang_ok_rate']:.0%})")
         print(f"  normal {s['base_tps']:.1f} tok/s"
               f"  (baseline spread {s['baseline_tps_min']:.1f}-{s['baseline_tps_max']:.1f} tok/s)")
+        if s.get("sm_mhz_median"):
+            warn = "   <-- GPU DOWNCLOCKED MID-RUN, timings unreliable" \
+                if s["sm_mhz_min"] < 0.7 * s["sm_mhz_max"] else ""
+            print(f"  GPU clock {s['sm_mhz_min']}-{s['sm_mhz_max']} MHz"
+                  f" (median {s['sm_mhz_median']}){warn}")
         print(f"  tokens/word {s['tokens_per_word']:.2f} | chars/token {s['chars_per_token']:.2f}")
         print(f"  {'K':>3s} {'spec tok/s':>11s} {'speedup':>8s} {'tau':>6s} {'tau pooled':>11s}"
               f" {'predicted':>10s} {'identical':>10s}")
