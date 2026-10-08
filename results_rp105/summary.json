@@ -1,0 +1,179 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "target": "Qwen/Qwen2.5-3B-Instruct",
+  "draft": "Qwen/Qwen2.5-0.5B-Instruct",
+  "max_new": 128,
+  "repeats": 2,
+  "seed": 0,
+  "k_sweep": [
+    2,
+    4,
+    6,
+    8
+  ],
+  "rep_penalty": 1.05,
+  "target_ms_per_pass": 34.64,
+  "draft_ms_per_pass": 23.13,
+  "c": 0.668,
+  "langs": {
+    "en": {
+      "n_prompts": 10,
+      "sm_mhz_min": 2115,
+      "sm_mhz_max": 2595,
+      "sm_mhz_median": 2580,
+      "sm_mhz_slow_runs": 0,
+      "lang_ok_rate": 1.0,
+      "base_tps": 26.81,
+      "baseline_tps_min": 25.66,
+      "baseline_tps_max": 28.78,
+      "tokens_per_word": 1.19,
+      "chars_per_token": 5.04,
+      "by_k": {
+        "2": {
+          "spec_tps": 23.8,
+          "speedup": 0.917,
+          "speedup_sd": 0.088,
+          "tau": 2.188,
+          "tau_pooled": 2.157,
+          "predicted_speedup": 0.924,
+          "identical_rate": 0.8
+        },
+        "4": {
+          "spec_tps": 18.37,
+          "speedup": 0.688,
+          "speedup_sd": 0.101,
+          "tau": 2.742,
+          "tau_pooled": 2.636,
+          "predicted_speedup": 0.718,
+          "identical_rate": 0.7
+        },
+        "6": {
+          "spec_tps": 16.68,
+          "speedup": 0.629,
+          "speedup_sd": 0.105,
+          "tau": 3.148,
+          "tau_pooled": 2.992,
+          "predicted_speedup": 0.598,
+          "identical_rate": 0.8
+        },
+        "8": {
+          "spec_tps": 13.02,
+          "speedup": 0.503,
+          "speedup_sd": 0.092,
+          "tau": 3.282,
+          "tau_pooled": 3.111,
+          "predicted_speedup": 0.491,
+          "identical_rate": 0.7
+        }
+      },
+      "best_k": 2,
+      "best_speedup": 0.917
+    },
+    "hi": {
+      "n_prompts": 10,
+      "sm_mhz_min": 2340,
+      "sm_mhz_max": 2580,
+      "sm_mhz_median": 2580,
+      "sm_mhz_slow_runs": 0,
+      "lang_ok_rate": 1.0,
+      "base_tps": 27.13,
+      "baseline_tps_min": 25.58,
+      "baseline_tps_max": 28.97,
+      "tokens_per_word": 4.66,
+      "chars_per_token": 1.06,
+      "by_k": {
+        "2": {
+          "spec_tps": 22.2,
+          "speedup": 0.853,
+          "speedup_sd": 0.078,
+          "tau": 2.133,
+          "tau_pooled": 2.159,
+          "predicted_speedup": 0.924,
+          "identical_rate": 0.9
+        },
+        "4": {
+          "spec_tps": 19.77,
+          "speedup": 0.755,
+          "speedup_sd": 0.108,
+          "tau": 2.725,
+          "tau_pooled": 2.712,
+          "predicted_speedup": 0.739,
+          "identical_rate": 0.9
+        },
+        "6": {
+          "spec_tps": 15.75,
+          "speedup": 0.577,
+          "speedup_sd": 0.088,
+          "tau": 2.943,
+          "tau_pooled": 2.998,
+          "predicted_speedup": 0.599,
+          "identical_rate": 1.0
+        },
+        "8": {
+          "spec_tps": 13.68,
+          "speedup": 0.5,
+          "speedup_sd": 0.092,
+          "tau": 3.165,
+          "tau_pooled": 3.192,
+          "predicted_speedup": 0.503,
+          "identical_rate": 1.0
+        }
+      },
+      "best_k": 2,
+      "best_speedup": 0.853
+    },
+    "ur": {
+      "n_prompts": 10,
+      "sm_mhz_min": 2220,
+      "sm_mhz_max": 2580,
+      "sm_mhz_median": 2580,
+      "sm_mhz_slow_runs": 0,
+      "lang_ok_rate": 1.0,
+      "base_tps": 27.49,
+      "baseline_tps_min": 24.46,
+      "baseline_tps_max": 28.92,
+      "tokens_per_word": 3.12,
+      "chars_per_token": 1.44,
+      "by_k": {
+        "2": {
+          "spec_tps": 19.37,
+          "speedup": 0.708,
+          "speedup_sd": 0.052,
+          "tau": 1.778,
+          "tau_pooled": 1.756,
+          "predicted_speedup": 0.752,
+          "identical_rate": 0.7
+        },
+        "4": {
+          "spec_tps": 13.65,
+          "speedup": 0.502,
+          "speedup_sd": 0.052,
+          "tau": 2.001,
+          "tau_pooled": 1.978,
+          "predicted_speedup": 0.539,
+          "identical_rate": 0.8
+        },
+        "6": {
+          "spec_tps": 10.73,
+          "speedup": 0.389,
+          "speedup_sd": 0.042,
+          "tau": 2.115,
+          "tau_pooled": 2.061,
+          "predicted_speedup": 0.412,
+          "identical_rate": 0.7
+        },
+        "8": {
+          "spec_tps": 8.73,
+          "speedup": 0.32,
+          "speedup_sd": 0.025,
+          "tau": 2.115,
+          "tau_pooled": 2.041,
+          "predicted_speedup": 0.322,
+          "identical_rate": 0.7
+        }
+      },
+      "best_k": 2,
+      "best_speedup": 0.708
+    }
+  }
+}

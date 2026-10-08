@@ -1,0 +1,302 @@
+[
+  {
+    "lang": "en",
+    "prompt_id": 0,
+    "prompt": "Explain how rain forms.",
+    "output": "Rain forms through a process called condensation and evaporation, which are part of the water cycle. Here's a simplified explanation:\n\n1. **Evaporation**: Water from oceans, lakes, rivers, and other bodies of water heats up by the sun and turns into vapor or steam. This process is called evaporation.\n\n2. **Condensation**: As the warm air containing water vapor rises, it cools down. When it cools, the water vapor changes back into tiny droplets of liquid, forming clouds. This process is called condensation.\n\n3. **Precipitation**: If the droplets combine and grow large enough,",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.41,
+    "chars_per_token": 4.54
+  },
+  {
+    "lang": "en",
+    "prompt_id": 1,
+    "prompt": "Write a short story about a boy and his kite.",
+    "output": "Once upon a sunny day, there was a young boy named Timmy who loved to fly kites. His favorite kite was a bright yellow one with a cartoon character on it. Every weekend, he would go to the park with his kite, hoping for a perfect day to fly it.\n\nOne Saturday morning, Timmy woke up early and rushed to the park. He had packed his bag with all the necessary items: the kite, a long string, and a small box of matches. As he arrived at the park, he saw many other children flying their kites too. The sky was clear, and the wind was just right for",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.17,
+    "chars_per_token": 4.26
+  },
+  {
+    "lang": "en",
+    "prompt_id": 2,
+    "prompt": "What are the benefits of drinking water?",
+    "output": "Drinking water offers numerous benefits to our health and well-being. Firstly, it helps maintain proper hydration levels in the body, which is crucial for various bodily functions such as digestion, circulation, temperature regulation, and waste elimination through urine. Secondly, staying hydrated can boost energy levels and improve cognitive function. Additionally, water can help with weight management by promoting satiety and reducing the intake of high-calorie beverages and foods. It also aids in skin health by keeping the skin moisturized and preventing dryness. Lastly, adequate water consumption can support kidney function and flush out toxins from the body.",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.24,
+    "chars_per_token": 5.6
+  },
+  {
+    "lang": "en",
+    "prompt_id": 3,
+    "prompt": "Explain in simple words what a computer does.",
+    "output": "A computer is like a super helper that can do many different tasks. You give it instructions, and it follows them to perform actions such as solving math problems, playing games, watching videos, or organizing your files. It can also store information and retrieve it when you need it. Essentially, computers help us by processing data quickly and efficiently.",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.17,
+    "chars_per_token": 5.22
+  },
+  {
+    "lang": "en",
+    "prompt_id": 4,
+    "prompt": "Describe a typical morning in a busy city.",
+    "output": "A typical morning in a busy city can be quite hectic and bustling. As the sun rises, the first sounds to break the quiet are the honking of car horns and the screeching of brakes as drivers navigate through the early morning rush hour traffic. The streets are already filled with people hurrying to their destinations, some on foot, others on bicycles or scooters, while still others are commuting by public transport.\n\nThe air is often thick with the smell of coffee from the numerous cafes and restaurants that have opened their doors. People are rushing to catch their trains, buses, or subways, and the stations and bus stops are crowded",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.15,
+    "chars_per_token": 5.01
+  },
+  {
+    "lang": "en",
+    "prompt_id": 5,
+    "prompt": "Give some tips for preparing for an exam.",
+    "output": "Certainly! Here are some tips to help you prepare for your exams:\n\n1. **Create a Study Schedule**: Plan out your study time and stick to it. Make sure to include breaks to avoid burnout.\n\n2. **Understand the Material**: Focus on understanding the material rather than just memorizing facts. Try to connect new information with what you already know.\n\n3. **Use Multiple Resources**: Don't rely solely on one source. Use textbooks, online resources, and other materials to get different perspectives on the topics.\n\n4. **Practice Regularly**: Regular practice can help reinforce your learning. Try solving past papers or practice tests to",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.28,
+    "chars_per_token": 4.97
+  },
+  {
+    "lang": "en",
+    "prompt_id": 6,
+    "prompt": "Why is exercise important for health?",
+    "output": "Exercise is important for health because it helps to maintain a healthy weight, strengthens the heart and lungs, improves mood, boosts energy levels, enhances sleep quality, and reduces the risk of chronic diseases such as diabetes, hypertension, and certain types of cancer. Regular physical activity also contributes to better flexibility, balance, and coordination, which can help prevent injuries and falls.",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.22,
+    "chars_per_token": 5.63
+  },
+  {
+    "lang": "en",
+    "prompt_id": 7,
+    "prompt": "Explain how a train works.",
+    "output": "A train operates on a system of tracks and relies on a combination of mechanical, electrical, and hydraulic components to move. Here's a simplified explanation of how it works:\n\n1. **Power Source**: Trains can be powered by various means depending on their type. Electric trains are powered by electricity transmitted through the overhead wires or third rails. Diesel locomotives use diesel engines to generate power. Some newer trains are also being developed that run on hydrogen fuel cells.\n\n2. **Engine**: The engine is the heart of the train. It provides the force needed to move the train forward. In diesel trains, this is provided by a diesel",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.2,
+    "chars_per_token": 5.08
+  },
+  {
+    "lang": "en",
+    "prompt_id": 8,
+    "prompt": "Write a letter to a friend about your holidays.",
+    "output": "Dear [Friend's Name],\n\nI hope this letter finds you well and happy. I just wanted to take a moment to share with you some of the wonderful experiences I had during my recent holiday.\n\nI started off in Paris, where I was greeted by the enchanting beauty of the Eiffel Tower and the romantic charm of the Seine River. The city was bustling with life, and I spent my days exploring its many museums, cafes, and markets. I even got to try some delicious French cuisine at a local bistro, which was an unforgettable experience.\n\nAfter a few days in Paris, I traveled to the beautiful island of Sant",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.17,
+    "chars_per_token": 4.63
+  },
+  {
+    "lang": "en",
+    "prompt_id": 9,
+    "prompt": "What is the importance of trees?",
+    "output": "Trees are incredibly important to our environment and ecosystem. They provide oxygen, which is essential for the survival of most life forms on Earth. Trees also help in maintaining the balance of carbon dioxide levels in the atmosphere by absorbing it through the process of photosynthesis. They offer shade and shelter, which is beneficial for humans and animals alike. Additionally, forests and trees play a crucial role in preventing soil erosion and providing habitats for numerous species of plants and animals. Furthermore, they contribute to the aesthetic beauty of our surroundings and can improve air quality by filtering pollutants from the air.",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 1.12,
+    "chars_per_token": 5.75
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 0,
+    "prompt": "बारिश कैसे बनती है, समझाइए।",
+    "output": "बारिश (rain) को समझने के लिए, हम यहाँ वातावरण भौतिकी का एक मॉडल लगाएंगे। जैसे कि पानी को बनाने के लिए आवश्यक चीजें हैं, वे नदी, गहराई, और ध",
+    "lang_ok": true,
+    "script_ratio": 0.94,
+    "tokens_per_word": 4.41,
+    "chars_per_token": 1.09
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 1,
+    "prompt": "एक लड़के और उसकी पतंग के बारे में एक छोटी कहानी लिखिए।",
+    "output": "एक छोटे लड़के ने अपनी पतंग के बारे में एक बहुत ही भारी प्रेम का वर्णन किया। उसकी पतंग एक बड़ी और जटिल थी, जिसका नाम बैंगन था। बैंगन ल",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 4.27,
+    "chars_per_token": 1.04
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 2,
+    "prompt": "पानी पीने के क्या फायदे हैं?",
+    "output": "पानी पीने के फायदे बहुत सारे हो सकते हैं:\n\n1. जीवन में आवश्यकता: हमें पानी की आवश्यकता होती है जिसे शरीर के विभिन्न संस्कारों में लगातार उपयोग क",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 4.57,
+    "chars_per_token": 1.12
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 3,
+    "prompt": "आसान शब्दों में समझाइए कि कंप्यूटर क्या करता है।",
+    "output": "कंप्यूटर, आपकी कामयाबी के लिए एक उपकरण है। यह आपकी जानकारी को संग्रहित करने और उसे विस्तारित करने के लिए उपलब्ध संसाधन है। यह भी डेटा को �",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 4.57,
+    "chars_per_token": 1.08
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 4,
+    "prompt": "किसी व्यस्त शहर की एक आम सुबह का वर्णन कीजिए।",
+    "output": "आमतौर पर, एक व्यस्त शहर की सुबह अपने रंगों से लेकर उसकी जीवनावलोकन के लिए बहुत अच्छी होती है। शहर की ऊँचाइयों पर चादर भरी गर्मी की जल-प",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 4.57,
+    "chars_per_token": 1.05
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 5,
+    "prompt": "परीक्षा की तैयारी के लिए कुछ सुझाव दीजिए।",
+    "output": "परीक्षा की तैयारी के लिए कुछ महत्वपूर्ण सुझाव हैं:\n\n1. आधिकारिक ट्रेनिंग: परीक्षा के लिए आधिकारिक ट्रेनिंग को जारी रखें। यह आपको अपने विषय",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 5.33,
+    "chars_per_token": 1.08
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 6,
+    "prompt": "स्वास्थ्य के लिए व्यायाम क्यों ज़रूरी है?",
+    "output": "शरीर की स्वास्थ्य को बनाने के लिए व्यायाम जरूरी है क्योंकि यह शरीर को चुनौतियों से बचाता है, और अन्य शरीरी स्वास्थ्य की घटनाओं को बढ़ाव",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 4.92,
+    "chars_per_token": 1.05
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 7,
+    "prompt": "समझाइए कि रेलगाड़ी कैसे चलती है।",
+    "output": "रेलगाड़ी चलती है जब उसके ट्रेनिंग या रेल से एक बाहर आने वाली आयताकार गहराई में दबाव पड़ता है। यह दबाव रेलगाड़ी को रेल से तैराकी करन",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 4.74,
+    "chars_per_token": 1.02
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 8,
+    "prompt": "अपनी छुट्टियों के बारे में एक दोस्त को पत्र लिखिए।",
+    "output": "दोस्त,\n\nमैं आपको अपनी छुट्टियों के बारे में बताना चाहता हूँ। मैं अपने दोस्तों से छुट्टियों के दौरान खेलना और खेलकर खेलना भी चाहता ह�",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 5.12,
+    "chars_per_token": 1.03
+  },
+  {
+    "lang": "hi",
+    "prompt_id": 9,
+    "prompt": "पेड़ों का क्या महत्व है?",
+    "output": "पेड़ों का महत्व बहुत अधिक है। ये हमारी प्रजाति के लिए जीवन की आर्थिक और सांस्कृतिक आवश्यकताओं को समाधान करने में मदद करते हैं। उन्हें खाद्य स",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 4.74,
+    "chars_per_token": 1.1
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 0,
+    "prompt": "بارش کیسے بنتی ہے، سمجھائیے۔",
+    "output": "بارش کیسے بنتی ہے، اس میں نیومورک پریشن (Nimbrocheyriformis) نورومورک (Noricum) اور بارش (Pluvia) کے نام سے بنایا جاتا ہے۔ اس میں نیومورک پریشن نورومورک کے نام سے بھارت میں بارش کو بھی نورومورک کہا جاتا ہے اور",
+    "lang_ok": true,
+    "script_ratio": 0.81,
+    "tokens_per_word": 3.37,
+    "chars_per_token": 1.63
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 1,
+    "prompt": "ایک لڑکے اور اس کی پتنگ کے بارے میں ایک مختصر کہانی لکھیے۔",
+    "output": "میں یہ مختصر کہانی لکھ سکتا ہوں:\n\nلڑکے میہا نے اپنی پتانگ کو چھوڑ دیا اور اس کے لئے یہاں بچے کو یہ کہا: \"میہا، میں نے اپنی پتانگ کو چھوڑ دیا کیا؟ اس کی وجہ چیز ہے جس میں م",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 3.12,
+    "chars_per_token": 1.34
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 2,
+    "prompt": "پانی پینے کے کیا فوائد ہیں؟",
+    "output": "پانی پینے کی فوائد بہت زیادہ ہی ہیں اور اس کے لیے مختلف طریقے سے کمیونٹی کے مختلف قسموں میں استعمال کی جاتی ہیں۔ اس میں سے کچھ فوائد شامل ہیں:\n\n1. میں نے آب: پانی پینے کے لیے آب کا استعمال کرتے ہوئے میں ن",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 2.78,
+    "chars_per_token": 1.59
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 3,
+    "prompt": "آسان الفاظ میں سمجھائیے کہ کمپیوٹر کیا کرتا ہے۔",
+    "output": "کمپیوٹر کمپیوٹر کی مفهوم کو آسان فاظ میں بھی سمجھا سکتا ہے۔ اس کے لیے، کمپیوٹر ہے یہ یہاں کہ یہ یہاں ہے کہ انہوں نے یہاں کام کرنے والے ہیں۔ اسے میکر پلی اور ڈی جی کے ذر",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 3.28,
+    "chars_per_token": 1.31
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 4,
+    "prompt": "کسی مصروف شہر کی ایک عام صبح کا حال بیان کیجیے۔",
+    "output": "عام صبح کی صرف یہ معلومات موجود ہیں جن کے مطابق کسی مصروف شہر کی ایک عام صبح کا حال بیان کرنے کے لئے:\n\nصباح کو کچھ وقت سے پہلے، مصروف شہر کے معمولی مرکزی مقامات میں سب سے زیادہ تعداد کے کاروباریوں نے آگے بڑھ کر کار کر ر",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 2.56,
+    "chars_per_token": 1.71
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 5,
+    "prompt": "امتحان کی تیاری کے لیے کچھ مشورے دیجیے۔",
+    "output": "میں نے اس مسئلے پر بہت سے توجہات کو جمع کیا ہے جس میں زیادہ تر ہی کتابیں، ریپورٹس، ویب سائٹات، ویڈیو مصنوعی ذکر ہوئے ہیں جن میں انتخاب کرنے کی تیاری کے لیے معلومات بنایا جا سکتا ہے۔ اگر انت",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 3.12,
+    "chars_per_token": 1.48
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 6,
+    "prompt": "صحت کے لیے ورزش کیوں ضروری ہے؟",
+    "output": "ورزش صحت کے لیے ضروری ہے چونکہ آنلاین کار، تلوث اور محدودیت فعالیت کے دلچسپی کے نتیجے میں جسم کی فعاليت کو کم کرتا ہے۔ ورزش آسانی سے بہترین طریقہ ہے جس میں جسم کی مختلف عضلات، خازنات اور سرطانات کو ت",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 3.05,
+    "chars_per_token": 1.55
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 7,
+    "prompt": "سمجھائیے کہ ریل گاڑی کیسے چلتی ہے۔",
+    "output": "ریل گاڑی کی کارنواک کی طور پر اسے دوسری ریل کی طرف میں سے یہ طریقہ کار کرتا ہے۔ اس کے لیے، یہ یہاں پر یونٹ (یا گزشتہ بات) کے ذخیرہ میں ہے جس میں یہاں پر یونٹ کی تبدیلی کے ل",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 3.05,
+    "chars_per_token": 1.34
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 8,
+    "prompt": "اپنی چھٹیوں کے بارے میں ایک دوست کو خط لکھیے۔",
+    "output": "میں نے اپنی چٹیوں کے بارے میں ایک دوست سے اینیشہک کی تیاری کی۔\n\nایک چٹی، یہ ہے جس میں میری حیات کی اہم تجربے کا ذکر ہوتا ہے۔ میں نے اس میں اپنی خاندان کی تعلقات، اور اپنی زندگی کے",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 3.12,
+    "chars_per_token": 1.4
+  },
+  {
+    "lang": "ur",
+    "prompt_id": 9,
+    "prompt": "درختوں کی کیا اہمیت ہے؟",
+    "output": "درختوں کی اہمیت بہت زیادہ ہے۔ وہ طبیعی تکنیکی اسٹیشنیاریوں کی طور پر متعلقہ ہیں جس میں نیچے ذکر ہوگا:\n\n1. میں میں کاؤنٹی: درختوں نے انسانوں کو میں میں کاؤنٹی کے لیے کلیدی خدمات دی",
+    "lang_ok": true,
+    "script_ratio": 1.0,
+    "tokens_per_word": 3.56,
+    "chars_per_token": 1.4
+  }
+]
