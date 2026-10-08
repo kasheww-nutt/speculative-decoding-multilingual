@@ -1,0 +1,8 @@
+# torch with CUDA is installed separately (see README)
+# transformers is pinned: the benchmark depends on 4.57 internals
+# (num_assistant_tokens / assistant_confidence_threshold and how HF mutates them)
+transformers==4.57.6
+accelerate
+matplotlib
+numpy
+ipykernel

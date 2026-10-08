@@ -1,0 +1,41 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "target": "Qwen/Qwen2.5-3B-Instruct",
+  "draft": "Qwen/Qwen2.5-0.5B-Instruct",
+  "max_new": 128,
+  "langs": {
+    "en": {
+      "n": 2,
+      "lang_ok_rate": 1.0,
+      "base_tps": 28.83,
+      "spec_tps": 18.27,
+      "speedup": 0.633,
+      "speedup_sd": 0.054,
+      "tau": 3.74,
+      "identical_rate": 1.0,
+      "tokens_per_word": 1.29
+    },
+    "hi": {
+      "n": 2,
+      "lang_ok_rate": 1.0,
+      "base_tps": 29.02,
+      "spec_tps": 18.02,
+      "speedup": 0.621,
+      "speedup_sd": 0.047,
+      "tau": 2.69,
+      "identical_rate": 1.0,
+      "tokens_per_word": 4.34
+    },
+    "ur": {
+      "n": 2,
+      "lang_ok_rate": 1.0,
+      "base_tps": 19.26,
+      "spec_tps": 6.84,
+      "speedup": 0.343,
+      "speedup_sd": 0.025,
+      "tau": 2.04,
+      "identical_rate": 1.0,
+      "tokens_per_word": 3.25
+    }
+  }
+}
