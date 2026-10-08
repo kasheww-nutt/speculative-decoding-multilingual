@@ -50,6 +50,7 @@ import csv
 import json
 import random
 import statistics as st
+import subprocess
 import time
 from pathlib import Path
 
@@ -93,6 +94,20 @@ def load(name):
     model = AutoModelForCausalLM.from_pretrained(name, dtype=torch.float16, device_map="cuda")
     model.eval()
     return model
+
+
+def gpu_clock_mhz():
+    """Current SM clock. Sampled OUTSIDE every timed region, so it cannot affect
+    a measurement. Recorded per run because an ASUS power-profile change once
+    dropped this box from 2580 to 930 MHz mid-sweep and silently ruined the
+    wall-clock timings (tau was unaffected - it is a pure count ratio)."""
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=clocks.sm", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=5).stdout.strip().splitlines()[0]
+        return int(out)
+    except Exception:
+        return None
 
 
 def set_draft_strategy(draft, k):
@@ -233,6 +248,7 @@ def main():
                 tokens=len(ids), sec=round(dt, 3), tps=round(len(ids) / dt, 2),
                 passes=passes, tau=round(tau, 3),
                 matches_baseline=None,   # resolved after the loop, see below
+                sm_mhz=gpu_clock_mhz(),  # sampled outside the timed region
                 wall=round(time.perf_counter() - t_start, 1),
             ))
             label = "baseline" if k == 0 else f"K={k}"
@@ -306,8 +322,12 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
         if not base:
             continue
         drift = [r["tps"] for r in all_lang if r["k"] == 0]
+        clocks = [r["sm_mhz"] for r in all_lang if r.get("sm_mhz")]
         entry = dict(
             n_prompts=len(base),
+            sm_mhz_min=min(clocks) if clocks else None,
+            sm_mhz_max=max(clocks) if clocks else None,
+            sm_mhz_median=round(st.median(clocks)) if clocks else None,
             lang_ok_rate=round(len({r["prompt_id"] for r in lr})
                                / len({r["prompt_id"] for r in all_lang}), 2),
             base_tps=med(list(base.values())),
@@ -359,6 +379,11 @@ def report(summary, args):
               f" right language {s['lang_ok_rate']:.0%})")
         print(f"  normal {s['base_tps']:.1f} tok/s"
               f"  (baseline spread {s['baseline_tps_min']:.1f}-{s['baseline_tps_max']:.1f} tok/s)")
+        if s.get("sm_mhz_median"):
+            warn = "   <-- GPU DOWNCLOCKED MID-RUN, timings unreliable" \
+                if s["sm_mhz_min"] < 0.7 * s["sm_mhz_max"] else ""
+            print(f"  GPU clock {s['sm_mhz_min']}-{s['sm_mhz_max']} MHz"
+                  f" (median {s['sm_mhz_median']}){warn}")
         print(f"  tokens/word {s['tokens_per_word']:.2f} | chars/token {s['chars_per_token']:.2f}")
         print(f"  {'K':>3s} {'spec tok/s':>11s} {'speedup':>8s} {'tau':>6s} {'tau pooled':>11s}"
               f" {'predicted':>10s} {'identical':>10s}")

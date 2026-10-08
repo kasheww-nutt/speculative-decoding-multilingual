@@ -8,3 +8,7 @@ venv/
 
 # personal working notes, not for the repo
 CLAUDE.md
+
+# scratch benchmark outputs (smoke / gate tests)
+results_smoke/
+results_gate/

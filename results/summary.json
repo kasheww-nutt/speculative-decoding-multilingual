@@ -3,39 +3,185 @@
   "target": "Qwen/Qwen2.5-3B-Instruct",
   "draft": "Qwen/Qwen2.5-0.5B-Instruct",
   "max_new": 128,
+  "repeats": 2,
+  "seed": 0,
+  "k_sweep": [
+    2,
+    4,
+    6,
+    8
+  ],
+  "target_ms_per_pass": 35.17,
+  "draft_ms_per_pass": 25.05,
+  "c": 0.712,
   "langs": {
     "en": {
-      "n": 2,
+      "n_prompts": 10,
+      "sm_mhz_min": 1080,
+      "sm_mhz_max": 2595,
+      "sm_mhz_median": 2580,
       "lang_ok_rate": 1.0,
-      "base_tps": 28.83,
-      "spec_tps": 18.27,
-      "speedup": 0.633,
-      "speedup_sd": 0.054,
-      "tau": 3.74,
-      "identical_rate": 1.0,
-      "tokens_per_word": 1.29
+      "base_tps": 25.678,
+      "baseline_tps_min": 18.96,
+      "baseline_tps_max": 29.04,
+      "tokens_per_word": 1.195,
+      "chars_per_token": 4.775,
+      "by_k": {
+        "2": {
+          "spec_tps": 23.41,
+          "speedup": 0.905,
+          "speedup_mean": 0.937,
+          "speedup_sd": 0.103,
+          "tau": 2.226,
+          "tau_pooled": 2.194,
+          "predicted_speedup": 0.905,
+          "identical_rate": 0.9
+        },
+        "4": {
+          "spec_tps": 18.215,
+          "speedup": 0.711,
+          "speedup_mean": 0.741,
+          "speedup_sd": 0.142,
+          "tau": 2.813,
+          "tau_pooled": 2.703,
+          "predicted_speedup": 0.702,
+          "identical_rate": 0.8
+        },
+        "6": {
+          "spec_tps": 15.465,
+          "speedup": 0.576,
+          "speedup_mean": 0.612,
+          "speedup_sd": 0.144,
+          "tau": 3.115,
+          "tau_pooled": 2.975,
+          "predicted_speedup": 0.564,
+          "identical_rate": 0.7
+        },
+        "8": {
+          "spec_tps": 11.825,
+          "speedup": 0.453,
+          "speedup_mean": 0.496,
+          "speedup_sd": 0.104,
+          "tau": 3.21,
+          "tau_pooled": 3.102,
+          "predicted_speedup": 0.463,
+          "identical_rate": 1.0
+        }
+      },
+      "best_k": 2,
+      "best_speedup": 0.905
     },
     "hi": {
-      "n": 2,
+      "n_prompts": 10,
+      "sm_mhz_min": 1920,
+      "sm_mhz_max": 2595,
+      "sm_mhz_median": 2580,
       "lang_ok_rate": 1.0,
-      "base_tps": 29.02,
-      "spec_tps": 18.02,
-      "speedup": 0.621,
-      "speedup_sd": 0.047,
-      "tau": 2.69,
-      "identical_rate": 1.0,
-      "tokens_per_word": 4.34
+      "base_tps": 25.742,
+      "baseline_tps_min": 21.12,
+      "baseline_tps_max": 28.93,
+      "tokens_per_word": 4.74,
+      "chars_per_token": 1.05,
+      "by_k": {
+        "2": {
+          "spec_tps": 24.685,
+          "speedup": 0.887,
+          "speedup_mean": 0.929,
+          "speedup_sd": 0.104,
+          "tau": 2.188,
+          "tau_pooled": 2.222,
+          "predicted_speedup": 0.917,
+          "identical_rate": 0.9
+        },
+        "4": {
+          "spec_tps": 18.475,
+          "speedup": 0.716,
+          "speedup_mean": 0.743,
+          "speedup_sd": 0.076,
+          "tau": 2.788,
+          "tau_pooled": 2.813,
+          "predicted_speedup": 0.731,
+          "identical_rate": 1.0
+        },
+        "6": {
+          "spec_tps": 16.275,
+          "speedup": 0.603,
+          "speedup_mean": 0.611,
+          "speedup_sd": 0.076,
+          "tau": 3.124,
+          "tau_pooled": 3.107,
+          "predicted_speedup": 0.589,
+          "identical_rate": 0.9
+        },
+        "8": {
+          "spec_tps": 13.555,
+          "speedup": 0.517,
+          "speedup_mean": 0.534,
+          "speedup_sd": 0.073,
+          "tau": 3.241,
+          "tau_pooled": 3.325,
+          "predicted_speedup": 0.496,
+          "identical_rate": 0.9
+        }
+      },
+      "best_k": 2,
+      "best_speedup": 0.887
     },
     "ur": {
-      "n": 2,
+      "n_prompts": 10,
+      "sm_mhz_min": 2145,
+      "sm_mhz_max": 2580,
+      "sm_mhz_median": 2580,
       "lang_ok_rate": 1.0,
-      "base_tps": 19.26,
-      "spec_tps": 6.84,
-      "speedup": 0.343,
-      "speedup_sd": 0.025,
-      "tau": 2.04,
-      "identical_rate": 1.0,
-      "tokens_per_word": 3.25
+      "base_tps": 24.405,
+      "baseline_tps_min": 17.78,
+      "baseline_tps_max": 28.89,
+      "tokens_per_word": 3.085,
+      "chars_per_token": 1.405,
+      "by_k": {
+        "2": {
+          "spec_tps": 20.955,
+          "speedup": 0.88,
+          "speedup_mean": 0.874,
+          "speedup_sd": 0.128,
+          "tau": 1.985,
+          "tau_pooled": 1.972,
+          "predicted_speedup": 0.813,
+          "identical_rate": 0.7
+        },
+        "4": {
+          "spec_tps": 16.18,
+          "speedup": 0.7,
+          "speedup_mean": 0.658,
+          "speedup_sd": 0.119,
+          "tau": 2.416,
+          "tau_pooled": 2.306,
+          "predicted_speedup": 0.599,
+          "identical_rate": 0.8
+        },
+        "6": {
+          "spec_tps": 13.055,
+          "speedup": 0.527,
+          "speedup_mean": 0.525,
+          "speedup_sd": 0.087,
+          "tau": 2.586,
+          "tau_pooled": 2.476,
+          "predicted_speedup": 0.469,
+          "identical_rate": 0.7
+        },
+        "8": {
+          "spec_tps": 10.74,
+          "speedup": 0.447,
+          "speedup_mean": 0.432,
+          "speedup_sd": 0.092,
+          "tau": 2.612,
+          "tau_pooled": 2.5,
+          "predicted_speedup": 0.373,
+          "identical_rate": 0.8
+        }
+      },
+      "best_k": 2,
+      "best_speedup": 0.88
     }
   }
 }
