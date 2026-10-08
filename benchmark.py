@@ -208,7 +208,7 @@ def main():
 
     out_dir = HERE / args.out
     out_dir.mkdir(exist_ok=True)
-    rows, canonical = [], {}
+    rows, canonical, ids_by_row = [], {}, []
     rng = random.Random(args.seed)
     total_runs = len(conditions) * args.repeats
     done = 0
@@ -226,17 +226,24 @@ def main():
                 canonical[key] = ids
             done += 1
             tau = len(ids) / max(passes, 1)
+            ids_by_row.append(ids)
             rows.append(dict(
                 repeat=rep, lang=lang, prompt_id=i, k=k,
                 mode=("baseline" if k == 0 else f"spec_k{k}"),
                 tokens=len(ids), sec=round(dt, 3), tps=round(len(ids) / dt, 2),
                 passes=passes, tau=round(tau, 3),
-                matches_baseline=(ids == canonical[key]) if key in canonical else None,
+                matches_baseline=None,   # resolved after the loop, see below
                 wall=round(time.perf_counter() - t_start, 1),
             ))
             label = "baseline" if k == 0 else f"K={k}"
             print(f"  [{done:3d}/{total_runs}] {lang} p{i} {label:>9s}"
                   f" | {len(ids) / dt:6.1f} tok/s | {passes:4d} passes | tau {tau:.2f}")
+
+    # Resolve identical-output checks only now. The run order is shuffled, so a
+    # speculative run can happen before that prompt's first baseline; comparing
+    # inside the loop would score those as "not identical".
+    for r, ids in zip(rows, ids_by_row):
+        r["matches_baseline"] = ids == canonical[(r["lang"], r["prompt_id"])]
 
     # Texts + language check, from the canonical baseline output of each prompt.
     samples, meta = [], {}
