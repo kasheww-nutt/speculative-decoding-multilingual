@@ -1,0 +1,38 @@
+[
+  {
+    "lang": "en",
+    "prompt": "Explain how rain forms.",
+    "lang_ok": true,
+    "output": "Rain forms through a process called condensation and evaporation, which are part of the water cycle. Here's a simplified explanation:\n\n1. **Evaporation**: Water from oceans, lakes, rivers, and other bodies of water heats up by the sun and turns into vapor or steam. This process is called evaporation.\n\n2. **Condensation**: As the warm air containing water vapor rises, it cools down. When it cools, the water vapor changes back into tiny droplets of liquid, forming clouds. This process is called condensation.\n\n3. **Precipitation**: If the droplets combine and grow large enough,"
+  },
+  {
+    "lang": "en",
+    "prompt": "Write a short story about a boy and his kite.",
+    "lang_ok": true,
+    "output": "Once upon a sunny day, there was a young boy named Timmy who loved to fly kites. His favorite kite was a bright yellow one with a cartoon character on it. Every weekend, he would go to the park with his kite, hoping for a perfect day to fly it.\n\nOne Saturday morning, Timmy woke up early and rushed to the park. He had packed his bag with all the necessary items: the kite, a long string, and a small box of matches. As he arrived at the park, he saw many other children flying their kites too. The sky was clear, and the wind was just right for"
+  },
+  {
+    "lang": "hi",
+    "prompt": "बारिश कैसे बनती है, समझाइए।",
+    "lang_ok": true,
+    "output": "बारिश (rain) को समझने के लिए, हम यहाँ वातावरण भौतिकी का एक मॉडल लगाएंगे। जैसे कि पानी को बनाने के लिए आवश्यक चीजें हैं, वे नदी, गहराई, और ध"
+  },
+  {
+    "lang": "hi",
+    "prompt": "एक लड़के और उसकी पतंग के बारे में एक छोटी कहानी लिखिए।",
+    "lang_ok": true,
+    "output": "एक छोटे लड़के ने अपनी पतंग के बारे में एक बहुत ही भारी प्रेम का वर्णन किया। उसकी पतंग एक बड़ी और जटिल थी, जिसका नाम बैंगन था। बैंगन ल"
+  },
+  {
+    "lang": "ur",
+    "prompt": "بارش کیسے بنتی ہے، سمجھائیے۔",
+    "lang_ok": true,
+    "output": "بارش کیسے بنتی ہے، اس میں نیومورک پریشن (Nimbrocheyriformis) نورومورک (Noricum) اور بارش (Pluvia) کے نام سے بنایا جاتا ہے۔ اس میں نیومورک پریشن نورومورک کے نام سے بھارت میں بارش کو بھی نورومورک کہا جاتا ہے اور"
+  },
+  {
+    "lang": "ur",
+    "prompt": "ایک لڑکے اور اس کی پتنگ کے بارے میں ایک مختصر کہانی لکھیے۔",
+    "lang_ok": true,
+    "output": "میں یہ مختصر کہانی لکھ سکتا ہوں:\n\nلڑکے میہا نے اپنی پتانگ کو چھوڑ دیا اور اس کے لئے یہاں بچے کو یہ کہا: \"میہا، میں نے اپنی پتانگ کو چھوڑ دیا کیا؟ اس کی وجہ چیز ہے جس میں م"
+  }
+]

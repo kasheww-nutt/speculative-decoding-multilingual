@@ -1,0 +1,7 @@
+lang,prompt_id,base_tps,spec_tps,speedup,tau,identical,tokens_per_word,script_ratio,lang_ok
+en,0,28.82,16.7,0.579,4.57,True,1.41,1.0,True
+en,1,28.84,19.84,0.688,2.91,True,1.17,1.0,True
+hi,0,28.99,16.65,0.574,2.46,True,4.41,0.94,True
+hi,1,29.04,19.38,0.667,2.91,True,4.27,1.0,True
+ur,0,28.82,10.61,0.368,1.88,True,3.37,0.81,True
+ur,1,9.7,3.08,0.317,2.21,True,3.12,1.0,True
