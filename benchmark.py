@@ -30,16 +30,16 @@ _get_stopping_criteria) and the ROC write-back (gated on truthiness).
 
 Other methodology notes
 -----------------------
-  * repetition_penalty is set explicitly for BOTH models (--rep-penalty,
-    default 1.05 = Qwen's own setting for the 3B). Qwen ships 1.05 for the
-    target and 1.1 for the draft, so left alone the two are penalised by
-    different amounts. 1.0 gives true argmax but makes the 3B loop badly in
-    Urdu; it also shifts the token distribution, so it can move tau.
+  * repetition_penalty is explicitly pinned (--rep-penalty, default 1.05).
+    HF reuses target settings/processors for assisted generation. A different
+    standalone draft default does not prove different assisted penalties.
+    1.0 removes this penalty; changing it shifts text trajectories and tau.
   * Condition order is shuffled with a fixed seed, so thermal drift is spread
     across conditions instead of always landing on whatever ran last.
-  * Every condition is repeated --repeats times and aggregated by MEDIAN, so a
-    single transient slowdown cannot move a language's number.
-  * tau is reported pooled (total tokens / total passes) as well as averaged.
+  * Conditions are repeated and aggregated by median. With only two repeats,
+    the median equals their mean and is still sensitive to a slow trial.
+  * tau is reported pooled (total tokens / total passes) and as a prompt median.
+    It includes target correction/bonus tokens; it is not acceptance percentage.
 
 Usage:
   python benchmark.py --limit 2 --repeats 1          # quick smoke test
@@ -63,7 +63,7 @@ HERE = Path(__file__).resolve().parent
 LANG_NAMES = {"en": "English", "hi": "Hindi", "ur": "Urdu"}
 SYSTEM = "Answer in the same language as the question."
 
-# Unicode ranges used to check the answer is really in the asked language.
+# Unicode script screen; this does not establish language, fluency or quality.
 SCRIPTS = {
     "en": [(0x0041, 0x005A), (0x0061, 0x007A)],                      # Latin
     "hi": [(0x0900, 0x097F)],                                        # Devanagari
@@ -79,6 +79,33 @@ def script_ratio(text, lang):
         return 0.0
     hit = sum(any(a <= ord(c) <= b for a, b in SCRIPTS[lang]) for c in letters)
     return hit / len(letters)
+
+
+def text_metrics(tok, ids, lang):
+    text = tok.decode(ids, skip_special_tokens=True)
+    sr = script_ratio(text, lang)
+    return text, dict(lang_ok=sr >= LANG_OK_THRESHOLD, script_ratio=sr,
+                      tokens_per_word=len(ids) / max(len(text.split()), 1),
+                      chars_per_token=len(text) / max(len(ids), 1),
+                      language_screen="unicode_script_only")
+
+
+def finalise_rows(rows, ids_by_row, canonical, tok):
+    """Screen each actual output and retain evidence for every divergence."""
+    evidence = []
+    for r, ids in zip(rows, ids_by_row):
+        reference = canonical[(r["lang"], r["prompt_id"])]
+        r["matches_baseline"] = ids == reference
+        text, meta = text_metrics(tok, ids, r["lang"])
+        r.update(meta)
+        first = next((i for i, (a, b) in enumerate(zip(ids, reference)) if a != b), None)
+        if first is None and len(ids) != len(reference):
+            first = min(len(ids), len(reference))
+        evidence.append(dict(repeat=r["repeat"], lang=r["lang"], prompt_id=r["prompt_id"],
+                             k=r["k"], token_ids=ids, output=text,
+                             matches_baseline=r["matches_baseline"],
+                             first_divergence_token_0based=first, **meta))
+    return evidence
 
 
 class PassCounter:
@@ -129,8 +156,9 @@ def encode(tok, prompt):
 
 
 # Qwen ships repetition_penalty 1.05 (3B) and 1.1 (0.5B) in generation_config.
-# Set explicitly so BOTH models use the same value - otherwise "greedy" is not
-# argmax and the two models are penalised by different amounts.
+# Set explicitly for target decoding. HF also reuses target generation settings
+# and logits processors for the assistant; the draft's standalone default is
+# not evidence that different penalties were used inside assisted generation.
 #   1.0  = true argmax, but the 3B loops badly in Urdu ("yahan yahan yahan...")
 #   1.05 = Qwen's intended setting for the target; readable output
 # Changing it shifts the token distribution, so it can move tau as well as text
@@ -156,26 +184,33 @@ def generate(target, tok, inputs, max_new, counter, draft=None, k=None, rep_pena
 
 
 @torch.inference_mode()
-def calibrate_pass_cost(target, draft, tok, counter, n=64, rep_penalty=1.05):
-    """Seconds per forward pass for each model alone, batch 1, with a KV cache.
-    Plain greedy decoding is exactly one forward pass per token, so sec/token is
-    sec/pass. Returns (target_sec_per_pass, draft_sec_per_pass, c)."""
+def calibrate_pass_cost(target, draft, tok, counter, n=64, rep_penalty=1.05, samples=None):
+    """End-to-end sec/token proxy, including prefill/bookkeeping, both resident.
+    This is not an isolated kernel cost or a causal overhead measurement.
+    Three interleaved repeats reduce sensitivity to one calibration transient.
+    """
     inputs = encode(tok, "Explain how rain forms.")
-    out = {}
+    out = {"target": [], "draft": []}
     for name, model in (("target", target), ("draft", draft)):
         for _ in range(2):   # warm up this model's kernels
             model.generate(**inputs, max_new_tokens=8, min_new_tokens=8,
                            pad_token_id=tok.eos_token_id,
                            repetition_penalty=rep_penalty, **GREEDY)
-        torch.cuda.synchronize()
-        t0 = time.perf_counter()
-        model.generate(**inputs, max_new_tokens=n, min_new_tokens=n,
-                       pad_token_id=tok.eos_token_id,
-                       repetition_penalty=rep_penalty, **GREEDY)
-        torch.cuda.synchronize()
-        out[name] = (time.perf_counter() - t0) / n
+    for rep in range(3):
+        models = (("target", target), ("draft", draft))
+        for name, model in (models if rep % 2 == 0 else models[::-1]):
+            torch.cuda.synchronize()
+            t0 = time.perf_counter()
+            model.generate(**inputs, max_new_tokens=n, min_new_tokens=n,
+                           pad_token_id=tok.eos_token_id,
+                           repetition_penalty=rep_penalty, **GREEDY)
+            torch.cuda.synchronize()
+            out[name].append((time.perf_counter() - t0) / n)
     counter.n = 0
-    return out["target"], out["draft"], out["draft"] / out["target"]
+    if samples is not None:
+        samples.update(out)
+    target_cost, draft_cost = st.median(out["target"]), st.median(out["draft"])
+    return target_cost, draft_cost, draft_cost / target_cost
 
 
 def main():
@@ -185,15 +220,24 @@ def main():
     ap.add_argument("--max-new", type=int, default=128)
     ap.add_argument("--langs", nargs="+", default=["en", "hi", "ur"])
     ap.add_argument("--limit", type=int, default=None, help="prompts per language (default: all)")
-    ap.add_argument("--k", nargs="+", type=int, default=[2, 4, 6, 8],
-                    help="draft lengths to sweep (HF unpinned behaves like K=20)")
-    ap.add_argument("--repeats", type=int, default=2, help="trials per condition; median reported")
+    ap.add_argument("--k", nargs="+", type=int, default=[1, 2, 4, 6, 8],
+                    help="maximum draft lengths to sweep; default HF K=20 has a confidence gate")
+    ap.add_argument("--repeats", type=int, default=3, help="trials per condition; median reported")
     ap.add_argument("--seed", type=int, default=0, help="seed for condition shuffling")
     ap.add_argument("--rep-penalty", type=float, default=1.05,
-                    help="repetition_penalty for BOTH models. 1.0 = true argmax but the 3B "
+                    help="repetition_penalty for target/assisted decoding. 1.0 removes the penalty but the 3B "
                          "loops in Urdu; 1.05 = Qwen's own setting for the target (default)")
-    ap.add_argument("--out", default="results")
+    ap.add_argument("--out", default="results_new")
     args = ap.parse_args()
+    if args.repeats < 1 or args.max_new < 1 or (args.limit is not None and args.limit < 1):
+        ap.error("repeats, max-new and limit must be positive")
+    if any(k < 1 for k in args.k) or len(set(args.k)) != len(args.k):
+        ap.error("k values must be positive and distinct")
+    if any(lang not in LANG_NAMES for lang in args.langs) or len(set(args.langs)) != len(args.langs):
+        ap.error("langs must be distinct values from en, hi, ur")
+    out_dir = HERE / args.out
+    if (out_dir / "raw.csv").exists():
+        ap.error("Output already contains measurements; choose a new --out folder")
 
     assert torch.cuda.is_available(), "CUDA not available - check the venv's torch build."
     gpu = torch.cuda.get_device_name(0)
@@ -220,9 +264,10 @@ def main():
     generate(target, tok, warm, 32, counter, rep_penalty=args.rep_penalty)
     generate(target, tok, warm, 32, counter, draft, k=args.k[0], rep_penalty=args.rep_penalty)
 
-    print("\nCalibrating forward-pass cost (batch 1) ...")
+    print("\nCalibrating end-to-end generation cost per token (batch 1) ...")
+    calibration_samples = {}
     t_pass, d_pass, c = calibrate_pass_cost(target, draft, tok, counter,
-                                            rep_penalty=args.rep_penalty)
+                                         rep_penalty=args.rep_penalty, samples=calibration_samples)
     k0 = args.k[0]
     print(f"  target {t_pass * 1e3:.1f} ms/pass | draft {d_pass * 1e3:.1f} ms/pass | c = {c:.2f}")
     print(f"  a win needs tau > 1 + K*c, i.e. tau > {1 + k0 * c:.1f} at K={k0}")
@@ -236,8 +281,20 @@ def main():
             for k in args.k:
                 conditions.append((lang, i, k))
 
-    out_dir = HERE / args.out
-    out_dir.mkdir(exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    import platform
+    import transformers
+    manifest = dict(target=args.target, draft=args.draft, gpu=gpu,
+                    python=platform.python_version(), torch=torch.__version__,
+                    transformers=transformers.__version__, cuda=torch.version.cuda,
+                    args=vars(args), target_revision=getattr(target.config, "_commit_hash", None),
+                    draft_revision=getattr(draft.config, "_commit_hash", None),
+                    target_generation_config=target.generation_config.to_dict(),
+                    draft_generation_config=draft.generation_config.to_dict(),
+                    calibration="median of three 64-token generations per model; includes prefill",
+                    calibration_seconds_per_token=calibration_samples,
+                    measurement="synchronized end-to-end generation, tokenization excluded")
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str), encoding="utf-8")
     rows, canonical, ids_by_row = [], {}, []
     rng = random.Random(args.seed)
     total_runs = len(conditions) * args.repeats
@@ -261,8 +318,8 @@ def main():
             rows.append(dict(
                 repeat=rep, lang=lang, prompt_id=i, k=k,
                 mode=("baseline" if k == 0 else f"spec_k{k}"),
-                tokens=len(ids), sec=round(dt, 3), tps=round(len(ids) / dt, 2),
-                passes=passes, tau=round(tau, 3),
+                tokens=len(ids), sec=dt, tps=len(ids) / dt,
+                passes=passes, tau=tau,
                 matches_baseline=None,   # resolved after the loop, see below
                 sm_mhz=gpu_clock_mhz(),  # sampled outside the timed region
                 wall=round(time.perf_counter() - t_start, 1),
@@ -274,26 +331,16 @@ def main():
     # Resolve identical-output checks only now. The run order is shuffled, so a
     # speculative run can happen before that prompt's first baseline; comparing
     # inside the loop would score those as "not identical".
-    for r, ids in zip(rows, ids_by_row):
-        r["matches_baseline"] = ids == canonical[(r["lang"], r["prompt_id"])]
+    evidence = finalise_rows(rows, ids_by_row, canonical, tok)
+    (out_dir / "run_outputs.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Texts + language check, from the canonical baseline output of each prompt.
     samples, meta = [], {}
     for (lang, i), ids in canonical.items():
-        text = tok.decode(ids, skip_special_tokens=True)
-        sr = script_ratio(text, lang)
-        meta[(lang, i)] = dict(
-            lang_ok=sr >= LANG_OK_THRESHOLD,
-            script_ratio=round(sr, 2),
-            tokens_per_word=round(len(ids) / max(len(text.split()), 1), 2),
-            chars_per_token=round(len(text) / max(len(ids), 1), 2),
-        )
+        text, meta[(lang, i)] = text_metrics(tok, ids, lang)
         samples.append(dict(lang=lang, prompt_id=i, prompt=prompts[lang][i],
                             output=text, **meta[(lang, i)]))
     samples.sort(key=lambda s: (args.langs.index(s["lang"]), s["prompt_id"]))
-
-    for r in rows:
-        r.update(meta[(r["lang"], r["prompt_id"])])
 
     with open(out_dir / "raw.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=rows[0].keys())
@@ -345,9 +392,8 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
             sm_mhz_min=min(clocks) if clocks else None,
             sm_mhz_max=max(clocks) if clocks else None,
             sm_mhz_median=round(st.median(clocks)) if clocks else None,
-            lang_ok_rate=round(len({r["prompt_id"] for r in lr})
-                               / len({r["prompt_id"] for r in all_lang}), 2),
-            base_tps=med(list(base.values())),
+            lang_ok_rate=round(len(lr) / len(all_lang), 3),
+            base_tps=round(st.median(base.values()), 2),
             baseline_tps_min=round(min(drift), 2),
             baseline_tps_max=round(max(drift), 2),
             tokens_per_word=med([r["tokens_per_word"] for r in lr if r["k"] == 0]),
@@ -355,7 +401,7 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
             by_k={},
         )
         for k in args.k:
-            kr = [r for r in lr if r["k"] == k]
+            kr = [r for r in lr if r["k"] == k and r["prompt_id"] in base]
             if not kr:
                 continue
             speedups, taus = [], []
@@ -369,7 +415,7 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
                 continue
             tau_pooled = sum(r["tokens"] for r in kr) / max(sum(r["passes"] for r in kr), 1)
             entry["by_k"][str(k)] = dict(
-                spec_tps=med([r["tps"] for r in kr]),
+                spec_tps=round(st.median(r["tps"] for r in kr), 2),
                 speedup=med(speedups),
                 speedup_mean=round(st.mean(speedups), 3),
                 speedup_sd=round(st.pstdev(speedups), 3) if len(speedups) > 1 else 0.0,
@@ -377,6 +423,7 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
                 tau_pooled=round(tau_pooled, 3),
                 predicted_speedup=round(tau_pooled / (1 + k * c), 3),
                 identical_rate=round(sum(bool(r["matches_baseline"]) for r in kr) / len(kr), 2),
+                n_runs=len(kr), n_prompts=len(speedups),
             )
         if entry["by_k"]:
             best = max(entry["by_k"], key=lambda k: entry["by_k"][k]["speedup"])
@@ -387,13 +434,13 @@ def summarise(rows, args, gpu, t_pass, d_pass, c):
 
 
 def report(summary, args):
-    print("\n=== Forward-pass cost (batch 1) ===")
+    print("\n=== End-to-end generation cost proxy (batch 1) ===")
     print(f"target {summary['target_ms_per_pass']:.1f} ms/pass | "
           f"draft {summary['draft_ms_per_pass']:.1f} ms/pass | c = {summary['c']:.2f}")
     print(f"\n=== Per language (median over prompts, {summary['repeats']} repeats each) ===")
     for lang, s in summary["langs"].items():
         print(f"\n{LANG_NAMES[lang]}  (n={s['n_prompts']} prompts,"
-              f" right language {s['lang_ok_rate']:.0%})")
+              f" script-screen run pass rate {s['lang_ok_rate']:.0%})")
         print(f"  normal {s['base_tps']:.1f} tok/s"
               f"  (baseline spread {s['baseline_tps_min']:.1f}-{s['baseline_tps_max']:.1f} tok/s)")
         if s.get("sm_mhz_median"):
@@ -413,10 +460,10 @@ def report(summary, args):
             print(f"  best: K={s['best_k']} at {s['best_speedup']:.2f}x{tail}")
     wins = [s["best_speedup"] for s in summary["langs"].values() if "best_speedup" in s]
     if wins and max(wins) <= 1:
-        print(f"\nNo K beat normal decoding (best {max(wins):.2f}x). With c = {summary['c']:.2f},"
+        print(f"\nNo tested K beat median baseline throughput (best {max(wins):.2f}x). With c = {summary['c']:.2f},"
               f" a win needs tau > 1 + K*c, and the measured tau never gets there."
-              f"\nThat is the honest finding: on this GPU + HF, per-call overhead dominates."
-              f" The language effect on tau is a separate, independent result.")
+              f"\nThis cost model is approximate; overhead sources were not profiled."
+              f" Language comparisons describe this model pair and these prompts.")
 
 
 def plot(summary, args, out_dir):
@@ -448,7 +495,7 @@ def plot(summary, args, out_dir):
     ax1.set_title("Speedup", fontsize=10)
     ax2.set_xlabel("K (draft tokens per round)")
     ax2.set_ylabel("tau (tokens per target pass)")
-    ax2.set_title("Draft acceptance", fontsize=10)
+    ax2.set_title("Tokens per target pass (includes bonus token)", fontsize=10)
     for ax in (ax1, ax2):
         ax.legend(fontsize=8, frameon=False)
         for s in ("top", "right"):
@@ -474,17 +521,18 @@ def plot(summary, args, out_dir):
     ax.axhline(1.0, color="#868E96", lw=1, ls="--")
     ax.text(len(have) - 0.5, 1.0, " no speedup", va="bottom", ha="right",
             fontsize=8, color="#868E96")
-    for b, v, t, bk in zip(bars, vals, taus, bks):
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.03,
+    for b, v, t, bk, sd in zip(bars, vals, taus, bks, sds):
+        ax.text(b.get_x() + b.get_width() / 2, v + sd + 0.04,
                 f"{v:.2f}x\nK={bk}, tau {t:.1f}", ha="center", va="bottom", fontsize=9)
     ax.set_ylabel("Speedup vs normal decoding (best K)")
     ax.set_ylim(0, max(max(vals) * 1.45 + 0.2, 1.15))
     ax.set_title(f"Speculative decoding by language, best K per language\n"
                  f"{args.draft.split('/')[-1]} -> {args.target.split('/')[-1]}, {summary['gpu']}",
                  fontsize=9)
+    fig.text(0.5, 0.01, "Error bars: SD across prompt speedup ratios; not a confidence interval", ha="center", fontsize=7)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
     fig.savefig(out_dir / "speedup.png")
     plt.close(fig)
 
