@@ -12,3 +12,7 @@ CLAUDE.md
 # scratch benchmark outputs (smoke / gate tests)
 results_smoke/
 results_gate/
+
+# render scratch and slide working files
+tmp/
+ppt/
